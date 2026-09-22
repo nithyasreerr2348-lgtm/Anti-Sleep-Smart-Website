@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Anti-Sleep Smart</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+
+    <!-- ================= HEADER ================= -->
+
+    <header>
+
+        <div class="logo">
+            Anti-Sleep Smart
+        </div>
+
+        <nav>
+
+            <a href="#home">Home</a>
+
+            <a href="#detection">Detection</a>
+
+            <a href="#camera">Live Monitor</a>
+
+            <a href="#about">About</a>
+
+        </nav>
+
+    </header>
+
+
+
+    <!-- ================= HERO ================= -->
+
+    <section class="hero" id="home">
+
+        <div class="hero-text">
+
+            <p class="small-title">
+                AI-POWERED ALERTNESS SYSTEM
+            </p>
+
+            <h1>
+                Stay Awake.<br>
+                Stay <span>Safe.</span>
+            </h1>
+
+            <p class="description">
+
+                An intelligent system designed to monitor
+                signs of drowsiness and provide an early
+                warning when reduced alertness is detected.
+
+            </p>
+
+            <a href="#camera" class="hero-button">
+                Start Monitoring
+            </a>
+
+        </div>
+
+
+        <div class="hero-card">
+
+            <div class="card-icon">
+                😴
+            </div>
+
+            <h3>
+                Smart Drowsiness Detection
+            </h3>
+
+            <p>
+
+                Monitor eye closure, yawning and facial
+                behaviour using AI-based detection.
+
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ================= DETECTION ================= -->
+
+    <section class="detection" id="detection">
+
+        <div class="section-title">
+
+            <p class="small-title">
+                WHAT WE DETECT
+            </p>
+
+            <h2>
+                Smart Detection
+            </h2>
+
+            <p>
+
+                The system can monitor different signs
+                related to drowsiness and alertness.
+
+            </p>
+
+        </div>
+
+
+
+        <div class="detection-grid">
+
+
+            <div class="detection-card">
+
+                <div class="detection-icon">
+                    👁️
+                </div>
+
+                <h3>
+                    Eyes
+                </h3>
+
+                <p>
+
+                    Detects whether the eyes are open or
+                    closed and identifies prolonged eye
+                    closure.
+
+                </p>
+
+                <span>
+                    Open / Closed
+                </span>
+
+            </div>
+
+
+
+            <div class="detection-card">
+
+                <div class="detection-icon">
+                    😴
+                </div>
+
+                <h3>
+                    Face / Drowsiness
+                </h3>
+
+                <p>
+
+                    Monitors facial behaviour, eye closure,
+                    head position and alert or drowsy states.
+
+                </p>
+
+                <span>
+                    Alert / Drowsy
+                </span>
+
+            </div>
+
+
+
+            <div class="detection-card">
+
+                <div class="detection-icon">
+                    🥱
+                </div>
+
+                <h3>
+                    Yawning
+                </h3>
+
+                <p>
+
+                    Identifies possible yawning behaviour
+                    and compares it with normal facial
+                    activity.
+
+                </p>
+
+                <span>
+                    Yawning / Normal
+                </span>
+
+            </div>
+
+
+
+            <div class="detection-card">
+
+                <div class="detection-icon">
+                    🚗
+                </div>
+
+                <h3>
+                    Driving Behaviour
+                </h3>
+
+                <p>
+
+                    Steering, lane and speed-related
+                    behaviour can be simulated or collected
+                    later.
+
+                </p>
+
+                <span>
+                    Future Module
+                </span>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ================= LIVE MONITOR ================= -->
+
+    <section class="monitor" id="camera">
+
+        <div class="monitor-box">
+
+            <p class="small-title">
+                LIVE AI MONITOR
+            </p>
+
+            <h2>
+                Are You Awake?
+            </h2>
+
+            <p>
+
+                Allow camera access to monitor your eyes,
+                face and yawning.
+
+            </p>
+
+
+
+            <!-- CAMERA -->
+
+            <div class="camera-container">
+
+                <video
+                    id="video"
+                    autoplay
+                    playsinline>
+                </video>
+
+
+                <div class="camera-status">
+
+                    <span id="cameraStatus">
+                        Camera not started
+                    </span>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- CAMERA BUTTONS -->
+
+            <div class="camera-buttons">
+
+                <button
+                    onclick="startCamera()"
+                    class="monitor-button">
+
+                    📷 Start Camera
+
+                </button>
+
+
+                <button
+                    onclick="stopCamera()"
+                    class="stop-button">
+
+                    ⏹️ Stop Camera
+
+                </button>
+
+
+                <!-- NEW MONITORING WINDOW BUTTON -->
+
+                <button
+                    onclick="openMonitoringWindow()"
+                    class="monitor-button">
+
+                    🖥️ Open Monitoring Window
+
+                </button>
+
+            </div>
+
+
+
+            <!-- DETECTION RESULTS -->
+
+            <div class="detection-result">
+
+
+                <div class="result-item">
+
+                    <span>
+                        👁️ Eyes
+                    </span>
+
+                    <strong id="eyeResult">
+                        Waiting...
+                    </strong>
+
+                </div>
+
+
+
+                <div class="result-item">
+
+                    <span>
+                        🥱 Yawning
+                    </span>
+
+                    <strong id="yawnResult">
+                        Waiting...
+                    </strong>
+
+                </div>
+
+
+
+                <div class="result-item">
+
+                    <span>
+                        😴 Drowsiness
+                    </span>
+
+                    <strong id="drowsyResult">
+                        Waiting...
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- SYSTEM RESULT -->
+
+            <div
+                id="result"
+                class="result">
+
+                Click "Start Camera" to begin detection.
+
+            </div>
+
+
+
+            <!-- DROWSINESS ALERT -->
+
+            <div
+                id="alertBox"
+                class="alert-box">
+
+                🚨 DROWSINESS ALERT
+
+                <br>
+
+                Possible drowsiness detected.
+
+                <br>
+
+                Please take a break and rest.
+
+            </div>
+
+
+
+            <!-- ================= RANDOM QUIZ ================= -->
+
+            <div
+                id="quizBox"
+                class="quiz-box">
+
+
+                <div class="quiz-icon">
+                    🧠
+                </div>
+
+
+                <h2>
+                    Quick Alertness Check
+                </h2>
+
+
+                <p class="quiz-message">
+
+                    A possible sign of drowsiness was detected.
+                    Please answer this simple question.
+
+                </p>
+
+
+                <!-- QUESTION -->
+
+                <div class="question">
+
+                    <h3 id="questionText">
+                        Question
+                    </h3>
+
+
+                    <!-- OPTIONS -->
+
+                    <div
+                        id="quizOptions"
+                        class="quiz-options">
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- QUIZ RESULT -->
+
+                <div
+                    id="quizResult"
+                    class="quiz-result">
+
+                </div>
+
+
+
+                <!-- CONTINUE -->
+
+                <button
+                    id="continueButton"
+                    onclick="continueMonitoring()"
+                    class="continue-button">
+
+                    🔄 Continue Monitoring
+
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ================= DATASET ================= -->
+
+    <section class="about">
+
+        <div class="section-title">
+
+            <p class="small-title">
+                DATA
+            </p>
+
+            <h2>
+                Detection Dataset
+            </h2>
+
+            <p>
+
+                The system is designed around different
+                types of data that can help identify
+                drowsiness.
+
+            </p>
+
+        </div>
+
+
+
+        <div class="detection-grid">
+
+
+            <div class="detection-card">
+
+                <h3>
+                    👁️ Eye State
+                </h3>
+
+                <p>
+
+                    Images or video frames containing
+                    open and closed eyes.
+
+                </p>
+
+            </div>
+
+
+
+            <div class="detection-card">
+
+                <h3>
+                    😴 Facial State
+                </h3>
+
+                <p>
+
+                    Facial information representing
+                    alert and drowsy states.
+
+                </p>
+
+            </div>
+
+
+
+            <div class="detection-card">
+
+                <h3>
+                    🥱 Yawning
+                </h3>
+
+                <p>
+
+                    Data containing yawning and normal
+                    mouth movements.
+
+                </p>
+
+            </div>
+
+
+
+            <div class="detection-card">
+
+                <h3>
+                    🚗 Driving Data
+                </h3>
+
+                <p>
+
+                    Steering, lane and speed behaviour
+                    can be added as a future dataset.
+
+                </p>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ================= ABOUT ================= -->
+
+    <section class="about" id="about">
+
+        <div class="section-title">
+
+            <p class="small-title">
+                ABOUT THE PROJECT
+            </p>
+
+            <h2>
+                Why Anti-Sleep Smart?
+            </h2>
+
+        </div>
+
+
+        <div class="about-content">
+
+            <p>
+
+                Drowsiness can reduce concentration and
+                reaction time. This project uses AI-based
+                detection to identify possible signs of
+                reduced alertness and provide an early
+                warning to the user.
+
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer>
+
+        <p>
+
+            © 2026 Anti-Sleep Smart |
+            AI & Data Science Project
+
+        </p>
+
+    </footer>
+
+
+
+    <!-- ================= AI LIBRARIES ================= -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+
+    <!-- OUR JAVASCRIPT -->
+
+    <script src="script.js"></script>
+
+
+    <!-- ================= MONITORING WINDOW ================= -->
+
+    <script>
+
+        function openMonitoringWindow() {
+
+            const monitorWindow = window.open(
+                window.location.href + "#camera",
+                "AntiSleepMonitor",
+                "width=900,height=800,resizable=yes,scrollbars=yes"
+            );
+
+            if (monitorWindow) {
+
+                monitorWindow.focus();
+
+            } else {
+
+                alert(
+                    "Please allow pop-ups for this website to open the monitoring window."
+                );
+
+            }
+
+        }
+
+    </script>
+
+
+</body>
+
+</html>
