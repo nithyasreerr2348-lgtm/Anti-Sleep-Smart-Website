@@ -1,6 +1,7 @@
 // ==========================================
 // ANTI-SLEEP SMART
-// AI CAMERA + DROWSINESS + RANDOM QUIZ
+// AI CAMERA + DROWSINESS + YAWN + RANDOM QUIZ
+// + STOP ALARM SYSTEM
 // ==========================================
 
 
@@ -24,7 +25,7 @@ const continueButton = document.getElementById("continueButton");
 
 
 // ==========================================
-// VARIABLES
+// CAMERA VARIABLES
 // ==========================================
 
 let camera = null;
@@ -37,9 +38,112 @@ let alertShown = false;
 let quizActive = false;
 let quizAnswered = false;
 
-// Yawn detection
+
+// ==========================================
+// YAWN VARIABLES
+// ==========================================
+
 let mouthOpenSince = null;
 let yawnDetected = false;
+
+
+// ==========================================
+// ALARM VARIABLES
+// ==========================================
+
+let audioContext = null;
+let alarmInterval = null;
+let alarmActive = false;
+
+// IMPORTANT:
+// Once the user presses STOP ALARM,
+// the alarm will NOT restart during
+// the current drowsiness episode.
+let alarmStoppedByUser = false;
+
+// One browser notification per
+// drowsiness episode.
+let activeNotification = null;
+
+
+// ==========================================
+// DROWSINESS EPISODE
+// ==========================================
+
+// This prevents the alarm from repeatedly
+// starting and stopping because of tiny
+// detection changes.
+let drowsinessEpisode = false;
+
+
+// ==========================================
+// CREATE STOP ALARM BUTTON
+// ==========================================
+
+function createStopAlarmButton() {
+
+    if (!alertBox) {
+        return;
+    }
+
+    let stopButton =
+        document.getElementById("stopAlarmButton");
+
+    if (stopButton) {
+        return;
+    }
+
+    stopButton =
+        document.createElement("button");
+
+    stopButton.id =
+        "stopAlarmButton";
+
+    stopButton.type =
+        "button";
+
+    stopButton.textContent =
+        "🛑 STOP ALARM";
+
+    stopButton.style.display =
+        "block";
+
+    stopButton.style.margin =
+        "15px auto 0";
+
+    stopButton.style.padding =
+        "12px 24px";
+
+    stopButton.style.fontSize =
+        "16px";
+
+    stopButton.style.fontWeight =
+        "bold";
+
+    stopButton.style.cursor =
+        "pointer";
+
+    stopButton.style.border =
+        "none";
+
+    stopButton.style.borderRadius =
+        "8px";
+
+    stopButton.style.background =
+        "#111";
+
+    stopButton.style.color =
+        "#fff";
+
+    stopButton.onclick =
+        function () {
+
+            stopAlarm(true);
+
+        };
+
+    alertBox.appendChild(stopButton);
+}
 
 
 // ==========================================
@@ -51,46 +155,69 @@ function centerAlertAndQuiz() {
     if (alertBox) {
 
         alertBox.style.position = "fixed";
+
         alertBox.style.top = "50%";
+
         alertBox.style.left = "50%";
-        alertBox.style.transform = "translate(-50%, -50%)";
+
+        alertBox.style.transform =
+            "translate(-50%, -50%)";
 
         alertBox.style.zIndex = "9999";
 
-        alertBox.style.width = "min(90vw, 600px)";
-        alertBox.style.maxHeight = "90vh";
+        alertBox.style.width =
+            "min(90vw, 600px)";
 
-        alertBox.style.overflowY = "auto";
+        alertBox.style.maxHeight =
+            "90vh";
 
-        alertBox.style.boxSizing = "border-box";
+        alertBox.style.overflowY =
+            "auto";
+
+        alertBox.style.boxSizing =
+            "border-box";
     }
 
 
     if (quizBox) {
 
         quizBox.style.position = "fixed";
+
         quizBox.style.top = "50%";
+
         quizBox.style.left = "50%";
-        quizBox.style.transform = "translate(-50%, -50%)";
+
+        quizBox.style.transform =
+            "translate(-50%, -50%)";
 
         quizBox.style.zIndex = "10000";
 
-        quizBox.style.width = "min(90vw, 600px)";
-        quizBox.style.maxHeight = "90vh";
+        quizBox.style.width =
+            "min(90vw, 600px)";
 
-        quizBox.style.overflowY = "auto";
+        quizBox.style.maxHeight =
+            "90vh";
 
-        quizBox.style.boxSizing = "border-box";
+        quizBox.style.overflowY =
+            "auto";
+
+        quizBox.style.boxSizing =
+            "border-box";
     }
 }
 
 
-// Center them when the page loads
+// ==========================================
+// INITIAL SETUP
+// ==========================================
+
 centerAlertAndQuiz();
+
+createStopAlarmButton();
 
 
 // ==========================================
-// 10 RANDOM QUESTIONS
+// 10 QUIZ QUESTIONS
 // ==========================================
 
 const quizQuestions = [
@@ -106,7 +233,6 @@ const quizQuestions = [
         answer: 1
     },
 
-
     {
         question: "What is 5 + 7?",
         options: [
@@ -118,9 +244,9 @@ const quizQuestions = [
         answer: 2
     },
 
-
     {
-        question: "Which planet is known as the Red Planet?",
+        question:
+            "Which planet is known as the Red Planet?",
         options: [
             "A. Earth",
             "B. Mars",
@@ -129,7 +255,6 @@ const quizQuestions = [
         ],
         answer: 1
     },
-
 
     {
         question: "What does CPU stand for?",
@@ -142,9 +267,9 @@ const quizQuestions = [
         answer: 0
     },
 
-
     {
-        question: "Which language is mainly used to create web page structure?",
+        question:
+            "Which language is mainly used to create web page structure?",
         options: [
             "A. HTML",
             "B. Python",
@@ -154,9 +279,9 @@ const quizQuestions = [
         answer: 0
     },
 
-
     {
-        question: "How many days are there in a week?",
+        question:
+            "How many days are there in a week?",
         options: [
             "A. 5",
             "B. 6",
@@ -166,9 +291,9 @@ const quizQuestions = [
         answer: 2
     },
 
-
     {
-        question: "Which one is a programming language?",
+        question:
+            "Which one is a programming language?",
         options: [
             "A. Python",
             "B. Chrome",
@@ -178,9 +303,9 @@ const quizQuestions = [
         answer: 0
     },
 
-
     {
-        question: "What is the largest planet in our Solar System?",
+        question:
+            "What is the largest planet in our Solar System?",
         options: [
             "A. Earth",
             "B. Mars",
@@ -190,9 +315,9 @@ const quizQuestions = [
         answer: 2
     },
 
-
     {
-        question: "How many sides does a triangle have?",
+        question:
+            "How many sides does a triangle have?",
         options: [
             "A. 2",
             "B. 3",
@@ -202,9 +327,9 @@ const quizQuestions = [
         answer: 1
     },
 
-
     {
-        question: "Which device is used to type text into a computer?",
+        question:
+            "Which device is used to type text into a computer?",
         options: [
             "A. Monitor",
             "B. Speaker",
@@ -225,6 +350,41 @@ async function startCamera() {
 
     try {
 
+        // Reset session
+        alarmStoppedByUser = false;
+        alarmActive = false;
+        alertShown = false;
+        drowsinessEpisode = false;
+
+        eyesClosedSince = null;
+        mouthOpenSince = null;
+        yawnDetected = false;
+
+        quizActive = false;
+        quizAnswered = false;
+
+        if (alarmInterval) {
+
+            clearInterval(alarmInterval);
+
+            alarmInterval = null;
+        }
+
+
+        if (activeNotification) {
+
+            try {
+                activeNotification.close();
+            } catch (error) {}
+
+            activeNotification = null;
+        }
+
+
+        // ==================================
+        // GET CAMERA
+        // ==================================
+
         mediaStream =
             await navigator.mediaDevices.getUserMedia({
                 video: true,
@@ -232,7 +392,8 @@ async function startCamera() {
             });
 
 
-        video.srcObject = mediaStream;
+        video.srcObject =
+            mediaStream;
 
 
         cameraStatus.textContent =
@@ -252,26 +413,91 @@ async function startCamera() {
 
 
         drowsyResult.textContent =
-            "Alert";
+            "ALERT";
 
 
-        // Center alert and quiz
+        alertBox.style.display =
+            "none";
+
+
+        quizBox.style.display =
+            "none";
+
+
         centerAlertAndQuiz();
 
 
-        // Browser notification permission
+        // ==================================
+        // NOTIFICATION PERMISSION
+        // ==================================
 
         if (
             "Notification" in window &&
             Notification.permission === "default"
         ) {
 
-            Notification.requestPermission();
+            try {
+
+                await Notification.requestPermission();
+
+            }
+
+            catch (error) {
+
+                console.log(
+                    "Notification permission unavailable."
+                );
+
+            }
 
         }
 
 
-        // Start AI detection
+        // ==================================
+        // PREPARE AUDIO
+        // ==================================
+
+        try {
+
+            if (!audioContext) {
+
+                const AudioContext =
+                    window.AudioContext ||
+                    window.webkitAudioContext;
+
+                if (AudioContext) {
+
+                    audioContext =
+                        new AudioContext();
+
+                }
+
+            }
+
+            if (
+                audioContext &&
+                audioContext.state === "suspended"
+            ) {
+
+                await audioContext.resume();
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.log(
+                "Audio could not be prepared.",
+                error
+            );
+
+        }
+
+
+        // ==================================
+        // START FACE DETECTION
+        // ==================================
 
         startFaceDetection();
 
@@ -281,10 +507,8 @@ async function startCamera() {
 
         console.error(error);
 
-
         cameraStatus.textContent =
             "Camera Access Denied";
-
 
         result.textContent =
             "Please allow camera permission and try again.";
@@ -300,56 +524,50 @@ async function startCamera() {
 
 function stopCamera() {
 
-    // Stop camera stream
+    // Stop everything first
+    stopAlarm(false);
 
+
+    // Stop camera stream
     if (mediaStream) {
 
         mediaStream
             .getTracks()
-            .forEach(function(track) {
+            .forEach(function (track) {
 
                 track.stop();
 
             });
 
         mediaStream = null;
-
     }
 
 
-    // Stop MediaPipe
-
+    // Stop MediaPipe camera
     if (camera) {
 
         camera.stop();
 
         camera = null;
-
     }
 
 
     // Remove video
-
     video.srcObject = null;
 
 
-    // Reset values
-
+    // Reset display
     cameraStatus.textContent =
         "Camera Stopped";
-
 
     eyeResult.textContent =
         "Stopped";
 
-
     yawnResult.textContent =
         "Stopped";
 
-
     drowsyResult.textContent =
         "Stopped";
-
 
     result.textContent =
         "Camera monitoring has been stopped.";
@@ -358,34 +576,26 @@ function stopCamera() {
     alertBox.style.display =
         "none";
 
-
     quizBox.style.display =
         "none";
 
 
-    eyesClosedSince =
-        null;
+    // Reset detection state
+    eyesClosedSince = null;
 
+    mouthOpenSince = null;
 
-    alertShown =
-        false;
+    yawnDetected = false;
 
+    alertShown = false;
 
-    quizActive =
-        false;
+    quizActive = false;
 
+    quizAnswered = false;
 
-    quizAnswered =
-        false;
+    alarmStoppedByUser = false;
 
-
-    mouthOpenSince =
-        null;
-
-
-    yawnDetected =
-        false;
-
+    drowsinessEpisode = false;
 }
 
 
@@ -398,11 +608,12 @@ function startFaceDetection() {
     const faceMesh =
         new FaceMesh({
 
-            locateFile: function(file) {
+            locateFile:
+                function (file) {
 
-                return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
 
-            }
+                }
 
         });
 
@@ -421,269 +632,274 @@ function startFaceDetection() {
 
 
     // ======================================
-    // AI RESULTS
+    // FACE RESULTS
     // ======================================
 
-    faceMesh.onResults(function(results) {
+    faceMesh.onResults(
+        function (results) {
 
+            // ==================================
+            // NO FACE
+            // ==================================
 
-        // ==================================
-        // CHECK FACE
-        // ==================================
+            if (
+                !results.multiFaceLandmarks ||
+                results.multiFaceLandmarks.length === 0
+            ) {
 
-        if (
-            !results.multiFaceLandmarks ||
-            results.multiFaceLandmarks.length === 0
-        ) {
+                result.textContent =
+                    "Face not detected. Please look at the camera.";
 
-            result.textContent =
-                "Face not detected. Please look at the camera.";
-
-
-            eyeResult.textContent =
-                "Waiting...";
-
-
-            yawnResult.textContent =
-                "Waiting...";
-
-
-            return;
-
-        }
-
-
-        // Get face landmarks
-
-        const landmarks =
-            results.multiFaceLandmarks[0];
-
-
-        // ==================================
-        // EYE DETECTION
-        // ==================================
-
-        const leftEye =
-            eyeAspectRatio(
-                landmarks,
-                33,
-                133,
-                159,
-                145
-            );
-
-
-        const rightEye =
-            eyeAspectRatio(
-                landmarks,
-                362,
-                263,
-                386,
-                374
-            );
-
-
-        const averageEye =
-            (leftEye + rightEye) / 2;
-
-
-        // ==================================
-        // MOUTH DETECTION
-        // ==================================
-
-        const mouthOpen =
-            mouthRatio(landmarks);
-
-
-        // ==================================
-        // EYE STATUS
-        // ==================================
-
-        if (averageEye < 0.20) {
-
-            eyeResult.textContent =
-                "Closed";
-
-
-            if (!eyesClosedSince) {
-
-                eyesClosedSince =
-                    Date.now();
-
-            }
-
-        }
-
-        else {
-
-            eyeResult.textContent =
-                "Open";
-
-
-            eyesClosedSince =
-                null;
-
-        }
-
-
-        // ==================================
-        // YAWN STATUS
-        // ==================================
-
-        /*
-         Normal speaking can briefly open
-         the mouth.
-
-         So we do NOT immediately call it
-         a yawn.
-
-         Mouth must be widely open AND remain
-         open for more than 1.5 seconds.
-        */
-
-        if (mouthOpen > 0.55) {
-
-            if (!mouthOpenSince) {
-
-                mouthOpenSince =
-                    Date.now();
-
-            }
-
-
-            const mouthOpenTime =
-                Date.now() -
-                mouthOpenSince;
-
-
-            if (mouthOpenTime > 1500) {
-
-                yawnDetected =
-                    true;
-
+                eyeResult.textContent =
+                    "Waiting...";
 
                 yawnResult.textContent =
-                    "Possible Yawn";
+                    "Waiting...";
+
+                return;
+            }
+
+
+            // ==================================
+            // GET LANDMARKS
+            // ==================================
+
+            const landmarks =
+                results.multiFaceLandmarks[0];
+
+
+            // ==================================
+            // EYE DETECTION
+            // ==================================
+
+            const leftEye =
+                eyeAspectRatio(
+                    landmarks,
+                    33,
+                    133,
+                    159,
+                    145
+                );
+
+
+            const rightEye =
+                eyeAspectRatio(
+                    landmarks,
+                    362,
+                    263,
+                    386,
+                    374
+                );
+
+
+            const averageEye =
+                (leftEye + rightEye) / 2;
+
+
+            // ==================================
+            // MOUTH DETECTION
+            // ==================================
+
+            const mouthOpen =
+                mouthRatio(landmarks);
+
+
+            // ==================================
+            // EYE STATUS
+            // ==================================
+
+            if (averageEye < 0.20) {
+
+                eyeResult.textContent =
+                    "Closed";
+
+
+                if (!eyesClosedSince) {
+
+                    eyesClosedSince =
+                        Date.now();
+
+                }
 
             }
 
             else {
 
+                eyeResult.textContent =
+                    "Open";
+
+                eyesClosedSince =
+                    null;
+
+            }
+
+
+            // ==================================
+            // YAWN STATUS
+            // ==================================
+
+            if (mouthOpen > 0.55) {
+
+                if (!mouthOpenSince) {
+
+                    mouthOpenSince =
+                        Date.now();
+
+                }
+
+
+                const mouthOpenTime =
+                    Date.now() -
+                    mouthOpenSince;
+
+
+                if (mouthOpenTime > 1500) {
+
+                    yawnDetected =
+                        true;
+
+                    yawnResult.textContent =
+                        "Possible Yawn";
+
+                }
+
+                else {
+
+                    yawnDetected =
+                        false;
+
+                    yawnResult.textContent =
+                        "Normal";
+
+                }
+
+            }
+
+            else {
+
+                mouthOpenSince =
+                    null;
+
                 yawnDetected =
                     false;
-
 
                 yawnResult.textContent =
                     "Normal";
 
             }
 
-        }
 
-        else {
+            // ==================================
+            // DROWSINESS CHECK
+            // ==================================
 
-            mouthOpenSince =
-                null;
-
-
-            yawnDetected =
+            let drowsy =
                 false;
 
 
-            yawnResult.textContent =
-                "Normal";
+            // Prolonged eye closure
+            if (eyesClosedSince) {
 
-        }
-
-
-        // ==================================
-        // DROWSINESS
-        // ==================================
-
-        let drowsy =
-            false;
+                const closedTime =
+                    Date.now() -
+                    eyesClosedSince;
 
 
-        // Prolonged eye closure
+                if (closedTime > 2000) {
 
-        if (eyesClosedSince) {
+                    drowsy =
+                        true;
 
-            const closedTime =
-                Date.now() -
-                eyesClosedSince;
+                }
+
+            }
 
 
-            if (closedTime > 2000) {
+            // Prolonged yawn
+            if (yawnDetected) {
 
                 drowsy =
                     true;
 
             }
 
-        }
 
+            // ==================================
+            // DROWSY
+            // ==================================
 
-        // Confirmed prolonged yawn
+            if (drowsy) {
 
-        if (yawnDetected) {
-
-            drowsy =
-                true;
-
-        }
-
-
-        // ==================================
-        // DISPLAY RESULT
-        // ==================================
-
-        if (drowsy) {
-
-            drowsyResult.textContent =
-                "DROWSY";
-
-
-            result.textContent =
-                "🚨 Possible drowsiness detected.";
-
-
-            showDrowsinessAlert();
-
-
-            // Show quiz after eyes remain
-            // closed for more than 3 seconds
-
-            if (
-                eyesClosedSince &&
-                Date.now() - eyesClosedSince > 3000 &&
-                !quizActive
-            ) {
-
-                showQuiz();
-
-            }
-
-        }
-
-        else {
-
-            drowsyResult.textContent =
-                "ALERT";
-
-
-            if (!quizActive) {
+                drowsyResult.textContent =
+                    "DROWSY";
 
                 result.textContent =
-                    "✅ You appear alert.";
+                    "🚨 Possible drowsiness detected.";
 
 
-                hideDrowsinessAlert();
+                // Start a new episode only once
+                if (!drowsinessEpisode) {
+
+                    drowsinessEpisode =
+                        true;
+
+                    // Allow alarm for this new episode
+                    alarmStoppedByUser =
+                        false;
+
+                    showDrowsinessAlert();
+
+                }
+
+                else {
+
+                    // Keep alert visible
+                    showDrowsinessAlert();
+
+                }
+
+
+                // ==================================
+                // QUIZ AFTER 3 SECONDS OF EYE CLOSURE
+                // ==================================
+
+                if (
+                    eyesClosedSince &&
+                    Date.now() -
+                        eyesClosedSince >
+                        3000 &&
+                    !quizActive
+                ) {
+
+                    showQuiz();
+
+                }
+
+            }
+
+            // ==================================
+            // ALERT / NOT DROWSY
+            // ==================================
+
+            else {
+
+                drowsyResult.textContent =
+                    "ALERT";
+
+
+                if (!quizActive) {
+
+                    result.textContent =
+                        "✅ You appear alert.";
+
+                    hideDrowsinessAlert();
+
+                }
 
             }
 
         }
-
-    });
+    );
 
 
     // ==================================
@@ -693,13 +909,14 @@ function startFaceDetection() {
     camera =
         new Camera(video, {
 
-            onFrame: async function() {
+            onFrame:
+                async function () {
 
-                await faceMesh.send({
-                    image: video
-                });
+                    await faceMesh.send({
+                        image: video
+                    });
 
-            },
+                },
 
             width: 640,
 
@@ -709,7 +926,6 @@ function startFaceDetection() {
 
 
     camera.start();
-
 }
 
 
@@ -739,8 +955,15 @@ function eyeAspectRatio(
         );
 
 
-    return vertical / horizontal;
+    if (horizontal === 0) {
 
+        return 1;
+
+    }
+
+
+    return vertical /
+        horizontal;
 }
 
 
@@ -764,8 +987,15 @@ function mouthRatio(landmarks) {
         );
 
 
-    return vertical / horizontal;
+    if (horizontal === 0) {
 
+        return 0;
+
+    }
+
+
+    return vertical /
+        horizontal;
 }
 
 
@@ -786,9 +1016,340 @@ function distance(point1, point2) {
 
 
     return Math.sqrt(
-        x * x + y * y
+        x * x +
+        y * y
     );
+}
 
+
+// ==========================================
+// START ALARM
+// ==========================================
+
+function startAlarm() {
+
+    // Already running
+    if (alarmActive) {
+        return;
+    }
+
+
+    // User pressed STOP
+    if (alarmStoppedByUser) {
+        return;
+    }
+
+
+    alarmActive =
+        true;
+
+
+    // Play immediately
+    playAlarm();
+
+
+    // Repeat every 3 seconds
+    alarmInterval =
+        setInterval(
+            function () {
+
+                if (
+                    alarmActive &&
+                    !alarmStoppedByUser
+                ) {
+
+                    playAlarm();
+
+                }
+
+            },
+            3000
+        );
+}
+
+
+// ==========================================
+// PLAY ALARM SOUND
+// ==========================================
+
+function playAlarm() {
+
+    if (
+        !audioContext ||
+        alarmStoppedByUser
+    ) {
+
+        return;
+    }
+
+
+    try {
+
+        if (
+            audioContext.state ===
+            "suspended"
+        ) {
+
+            audioContext.resume();
+
+        }
+
+
+        const oscillator =
+            audioContext.createOscillator();
+
+        const gain =
+            audioContext.createGain();
+
+
+        oscillator.type =
+            "square";
+
+
+        // Alarm tone
+        oscillator.frequency.setValueAtTime(
+            880,
+            audioContext.currentTime
+        );
+
+
+        oscillator.frequency.setValueAtTime(
+            660,
+            audioContext.currentTime + 0.25
+        );
+
+
+        oscillator.frequency.setValueAtTime(
+            880,
+            audioContext.currentTime + 0.50
+        );
+
+
+        // Volume
+        gain.gain.setValueAtTime(
+            0.0001,
+            audioContext.currentTime
+        );
+
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.30,
+            audioContext.currentTime + 0.03
+        );
+
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.0001,
+            audioContext.currentTime + 0.70
+        );
+
+
+        oscillator.connect(gain);
+
+        gain.connect(
+            audioContext.destination
+        );
+
+
+        oscillator.start();
+
+
+        oscillator.stop(
+            audioContext.currentTime + 0.75
+        );
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Alarm sound error:",
+            error
+        );
+
+    }
+}
+
+
+// ==========================================
+// BROWSER NOTIFICATION
+// ==========================================
+
+function sendDrowsinessNotification() {
+
+    if (
+        !("Notification" in window)
+    ) {
+
+        return;
+    }
+
+
+    if (
+        Notification.permission !==
+        "granted"
+    ) {
+
+        return;
+    }
+
+
+    // Only one notification
+    if (activeNotification) {
+
+        return;
+
+    }
+
+
+    try {
+
+        activeNotification =
+            new Notification(
+                "🚨 Drowsiness Alert",
+                {
+                    body:
+                        "Possible drowsiness detected. Please take a break.",
+
+                    requireInteraction:
+                        true
+                }
+            );
+
+
+        activeNotification.onclick =
+            function () {
+
+                try {
+
+                    window.focus();
+
+                }
+
+                catch (error) {}
+
+            };
+
+
+        activeNotification.onclose =
+            function () {
+
+                activeNotification =
+                    null;
+
+            };
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Notification error:",
+            error
+        );
+
+        activeNotification =
+            null;
+
+    }
+}
+
+
+// ==========================================
+// STOP ALARM
+// ==========================================
+
+function stopAlarm(
+    stoppedByUser = true
+) {
+
+    // ==================================
+    // USER STOPPED ALARM
+    // ==================================
+
+    if (stoppedByUser) {
+
+        alarmStoppedByUser =
+            true;
+
+    }
+
+
+    // ==================================
+    // STOP REPEATING ALARM
+    // ==================================
+
+    if (alarmInterval) {
+
+        clearInterval(
+            alarmInterval
+        );
+
+        alarmInterval =
+            null;
+    }
+
+
+    alarmActive =
+        false;
+
+
+    // ==================================
+    // CLOSE NOTIFICATION
+    // ==================================
+
+    if (activeNotification) {
+
+        try {
+
+            activeNotification.close();
+
+        }
+
+        catch (error) {}
+
+        activeNotification =
+            null;
+    }
+
+
+    // ==================================
+    // STOP AUDIO
+    // ==================================
+
+    if (
+        audioContext &&
+        audioContext.state === "running"
+    ) {
+
+        try {
+
+            audioContext.suspend();
+
+        }
+
+        catch (error) {}
+
+    }
+
+
+    // ==================================
+    // UPDATE SCREEN
+    // ==================================
+
+    if (
+        stoppedByUser &&
+        !quizActive
+    ) {
+
+        alertBox.style.display =
+            "none";
+
+
+        result.textContent =
+            "🔇 Alarm stopped. Monitoring continues.";
+
+    }
 }
 
 
@@ -798,40 +1359,52 @@ function distance(point1, point2) {
 
 function showDrowsinessAlert() {
 
-    // Make sure it is always centered
-
     centerAlertAndQuiz();
+
+    createStopAlarmButton();
 
 
     alertBox.style.display =
         "block";
 
 
-    // Browser notification
+    const stopButton =
+        document.getElementById(
+            "stopAlarmButton"
+        );
+
+
+    if (stopButton) {
+
+        stopButton.style.display =
+            "block";
+
+    }
+
+
+    // ==================================
+    // START ALARM
+    // ==================================
+
+    if (!alarmStoppedByUser) {
+
+        startAlarm();
+
+    }
+
+
+    // ==================================
+    // SEND NOTIFICATION
+    // ==================================
 
     if (!alertShown) {
 
         alertShown =
             true;
 
-
-        if (
-            "Notification" in window &&
-            Notification.permission === "granted"
-        ) {
-
-            new Notification(
-                "🚨 Drowsiness Alert",
-                {
-                    body:
-                        "Possible drowsiness detected. Please take a break."
-                }
-            );
-
-        }
+        sendDrowsinessNotification();
 
     }
-
 }
 
 
@@ -849,9 +1422,27 @@ function hideDrowsinessAlert() {
     }
 
 
+    // ==================================
+    // END CURRENT EPISODE
+    // ==================================
+
+    if (
+        drowsinessEpisode
+    ) {
+
+        drowsinessEpisode =
+            false;
+
+        alarmStoppedByUser =
+            false;
+
+        stopAlarm(false);
+
+    }
+
+
     alertShown =
         false;
-
 }
 
 
@@ -869,9 +1460,6 @@ function showQuiz() {
         false;
 
 
-    // IMPORTANT:
-    // Keep quiz exactly in the center
-
     centerAlertAndQuiz();
 
 
@@ -881,6 +1469,24 @@ function showQuiz() {
 
     alertBox.style.display =
         "block";
+
+
+    // Keep stop button visible
+    createStopAlarmButton();
+
+
+    const stopButton =
+        document.getElementById(
+            "stopAlarmButton"
+        );
+
+
+    if (stopButton) {
+
+        stopButton.style.display =
+            "block";
+
+    }
 
 
     quizResult.textContent =
@@ -895,7 +1501,9 @@ function showQuiz() {
         "🧠 Please complete the quick alertness check.";
 
 
-    // Select random question
+    // ==================================
+    // RANDOM QUESTION
+    // ==================================
 
     const randomIndex =
         Math.floor(
@@ -909,30 +1517,32 @@ function showQuiz() {
 
 
     // Store correct answer
-
     quizBox.dataset.answer =
         selectedQuestion.answer;
 
 
     // Show question
-
     questionText.textContent =
         selectedQuestion.question;
 
 
-    // Clear old buttons
-
+    // Clear previous buttons
     quizOptions.innerHTML =
         "";
 
 
-    // Create buttons
-
+    // Create answer buttons
     selectedQuestion.options.forEach(
-        function(option, index) {
+        function (option, index) {
 
             const button =
-                document.createElement("button");
+                document.createElement(
+                    "button"
+                );
+
+
+            button.type =
+                "button";
 
 
             button.textContent =
@@ -940,7 +1550,7 @@ function showQuiz() {
 
 
             button.onclick =
-                function() {
+                function () {
 
                     checkAnswer(index);
 
@@ -953,15 +1563,16 @@ function showQuiz() {
 
         }
     );
-
 }
 
 
 // ==========================================
-// CHECK ANSWER
+// CHECK QUIZ ANSWER
 // ==========================================
 
-function checkAnswer(selectedAnswer) {
+function checkAnswer(
+    selectedAnswer
+) {
 
     if (quizAnswered) {
 
@@ -980,14 +1591,15 @@ function checkAnswer(selectedAnswer) {
         );
 
 
-    // Disable buttons
-
+    // Disable all buttons
     const buttons =
-        quizOptions.querySelectorAll("button");
+        quizOptions.querySelectorAll(
+            "button"
+        );
 
 
     buttons.forEach(
-        function(button) {
+        function (button) {
 
             button.disabled =
                 true;
@@ -996,7 +1608,9 @@ function checkAnswer(selectedAnswer) {
     );
 
 
-    // Check answer
+    // ==================================
+    // CORRECT
+    // ==================================
 
     if (
         selectedAnswer ===
@@ -1012,6 +1626,11 @@ function checkAnswer(selectedAnswer) {
 
     }
 
+
+    // ==================================
+    // WRONG
+    // ==================================
+
     else {
 
         quizResult.textContent =
@@ -1025,10 +1644,8 @@ function checkAnswer(selectedAnswer) {
 
 
     // Show continue button
-
     continueButton.style.display =
         "block";
-
 }
 
 
@@ -1062,20 +1679,80 @@ function continueMonitoring() {
         "none";
 
 
+    // Reset detection timers
     eyesClosedSince =
         null;
+
+    mouthOpenSince =
+        null;
+
+    yawnDetected =
+        false;
+
+
+    // ==================================
+    // RESET ALARM
+    // ==================================
+
+    if (alarmInterval) {
+
+        clearInterval(
+            alarmInterval
+        );
+
+        alarmInterval =
+            null;
+    }
+
+
+    alarmActive =
+        false;
+
+
+    alarmStoppedByUser =
+        false;
+
+
+    drowsinessEpisode =
+        false;
 
 
     alertShown =
         false;
 
 
-    mouthOpenSince =
-        null;
+    // Close notification
+    if (activeNotification) {
+
+        try {
+
+            activeNotification.close();
+
+        }
+
+        catch (error) {}
+
+        activeNotification =
+            null;
+    }
 
 
-    yawnDetected =
-        false;
+    // Resume audio for future alerts
+    if (
+        audioContext &&
+        audioContext.state ===
+        "suspended"
+    ) {
+
+        try {
+
+            audioContext.resume();
+
+        }
+
+        catch (error) {}
+
+    }
 
 
     result.textContent =
@@ -1085,4 +1762,11 @@ function continueMonitoring() {
     drowsyResult.textContent =
         "ALERT";
 
+
+    eyeResult.textContent =
+        "Detecting...";
+
+
+    yawnResult.textContent =
+        "Detecting...";
 }
